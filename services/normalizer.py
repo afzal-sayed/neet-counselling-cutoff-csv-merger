@@ -50,6 +50,7 @@ def extract_state(college_name) -> str:
     for i, part in enumerate(parts):
         if re.fullmatch(r'\d{6}', part):
             return parts[i - 1].strip().title() if i > 0 else 'Unknown'
+    # No PIN found. Real format is "Name, City, State" — state is the last part.
     if len(parts) >= 2:
         return parts[-1].strip().title()
     return 'Unknown'

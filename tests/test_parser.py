@@ -2,7 +2,7 @@ import io
 import pytest
 import pandas as pd
 from openpyxl import Workbook
-from services.parser import read_file
+from services.parser import read_file, _detect_header_row
 
 def make_xlsx_bytes(rows, sheet_name='CUTOFF'):
     wb = Workbook()
@@ -49,3 +49,32 @@ def test_empty_rows_returns_empty_dataframe():
     ])
     df = read_file(io.BytesIO(data), 'round1.xlsx', 1)
     assert len(df) == 0
+
+def test_detect_header_row_returns_0_for_normal_file():
+    import pandas as pd
+    data = make_xlsx_bytes([
+        ['Quota', 'Institute Name', 'Course', 'Category', 'AIR'],
+        ['AI', 'Test College', 'MD', 'Open', '100'],
+    ])
+    xf = pd.ExcelFile(io.BytesIO(data))
+    assert _detect_header_row(xf, xf.sheet_names[0]) == 0
+
+def test_detect_header_row_returns_1_for_title_row_file():
+    import pandas as pd
+    data = make_xlsx_bytes([
+        ['NEET PG 2025 ALL INDIA 1ST ROUND CUT OFF LIST', None, None, None, None],
+        ['Quota', 'Institute Name', 'Course', 'Category', 'AIR'],
+        ['AI', 'Test College', 'MD', 'Open', '100'],
+    ])
+    xf = pd.ExcelFile(io.BytesIO(data))
+    assert _detect_header_row(xf, xf.sheet_names[0]) == 1
+
+def test_read_xlsx_with_title_row_reads_correct_headers():
+    data = make_xlsx_bytes([
+        ['NEET PG 2025 ALL INDIA CUT OFF LIST', None, None, None, None],
+        ['Quota', 'Institute Name', 'Course', 'Category', 'AIR'],
+        ['AI', 'Test College', 'MD', 'Open', '100'],
+    ])
+    df = read_file(io.BytesIO(data), 'round1.xlsx', 1)
+    assert 'Quota' in df.columns
+    assert len(df) == 1

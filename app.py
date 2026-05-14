@@ -39,15 +39,15 @@ def _process_job(job_id: str, files_data: dict) -> None:
         upd(60, 'Fuzzy matching colleges...')
         mapping, match_log = build_fuzzy_mapping(normalized)
 
-        job.update({
-            'dfs': normalized,
-            'mapping': mapping,
-            'match_log': match_log,
-            'fuzzy_matches': match_log,
-            'status': 'review',
-            'progress': 100,
-            'stage': 'Ready for review',
-        })
+        # Write all fields before setting status='review' so polling threads
+        # never see status=review with fuzzy_matches still empty.
+        job['dfs'] = normalized
+        job['mapping'] = mapping
+        job['match_log'] = match_log
+        job['fuzzy_matches'] = match_log
+        job['progress'] = 100
+        job['stage'] = 'Ready for review'
+        job['status'] = 'review'  # written last — acts as the visibility barrier
     except Exception as exc:
         job.update({'status': 'error', 'error': str(exc), 'stage': 'Error'})
 

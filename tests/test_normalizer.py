@@ -46,7 +46,8 @@ def test_extract_state_with_pin():
     name = "Andhra Medical College,Andhra Medical College, Andhra Pradesh, 530002"
     assert extract_state(name) == "Andhra Pradesh"
 
-def test_extract_state_without_pin_uses_second_to_last():
+def test_extract_state_without_pin_uses_last_part():
+    # Format without PIN: "Name, City, State" — state is the last comma-separated part.
     name = "Some College, Some City, Tamil Nadu"
     assert extract_state(name) == "Tamil Nadu"
 

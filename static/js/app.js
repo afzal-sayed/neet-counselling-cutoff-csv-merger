@@ -149,8 +149,9 @@ async function doUpload() {
     form.append(key, file, file.name);
 
   const resp = await fetch('/process', { method: 'POST', body: form });
-  if (!resp.ok) { showError((await resp.json()).error || 'Upload failed'); return; }
-  currentJobId = (await resp.json()).job_id;
+  const body = await resp.json().catch(() => ({}));
+  if (!resp.ok) { showError(body.error || 'Upload failed'); return; }
+  currentJobId = body.job_id;
   pollInterval = setInterval(poll, 800);
 }
 

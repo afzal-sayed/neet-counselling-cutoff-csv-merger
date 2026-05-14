@@ -11,6 +11,8 @@ OUTPUT_COLS = KEY_COLS + ROUND_COLS
 
 
 def merge_rounds(dfs: list) -> pd.DataFrame:
+    if not dfs:
+        return pd.DataFrame(columns=OUTPUT_COLS)
     merged = None
     for df in sorted(dfs, key=lambda d: int(d['_round'].iloc[0])):
         round_num = int(df['_round'].iloc[0])
@@ -33,8 +35,10 @@ def build_xlsx(merged_df: pd.DataFrame, match_log: list) -> bytes:
     with pd.ExcelWriter(buf, engine='xlsxwriter') as writer:
         merged_df.to_excel(writer, sheet_name='All Rounds', index=False)
         if match_log:
-            match_df = pd.DataFrame(match_log)
-            match_df.columns = ['Original Name', 'Matched To', 'Similarity Score', 'Round', 'State']
+            match_df = pd.DataFrame(match_log).rename(columns={
+                'original': 'Original Name', 'matched': 'Matched To',
+                'score': 'Similarity Score', 'round': 'Round', 'state': 'State',
+            })
             match_df.to_excel(writer, sheet_name='Match Report', index=False)
     return buf.getvalue()
 

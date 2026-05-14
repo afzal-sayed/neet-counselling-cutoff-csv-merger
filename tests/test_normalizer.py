@@ -76,6 +76,87 @@ def test_extract_state_duplicate_address_trailing():
     name = "Govt Medical College, Ramagundam, Telangana, Malkapur Village Ramagundam Mandal Pedapalli"
     assert extract_state(name) == "Telangana"
 
+# ── State alias / variant normalisation ───────────────────────────────────
+
+def test_alias_up_abbreviation():
+    assert extract_state("Some Hospital, Lucknow, UP") == "Uttar Pradesh"
+
+def test_alias_u_dot_p():
+    assert extract_state("Some Hospital, Pratapgarh U.P") == "Uttar Pradesh"
+
+def test_alias_westbengal_fused():
+    assert extract_state("Some Hospital, Kolkata, Westbengal") == "West Bengal"
+
+def test_alias_tamilnadu_fused():
+    assert extract_state("Some Hospital, Chennai, Tamilnadu") == "Tamil Nadu"
+
+def test_alias_tami_l_nadu_ocr():
+    assert extract_state("Some Hospital, Coimbatore, Tami L Nadu") == "Tamil Nadu"
+
+def test_alias_chennai_maps_to_tamilnadu():
+    # "Chennai" appears as a state value in NEET data; it is in Tamil Nadu.
+    assert extract_state("Some Hospital, Chennai") == "Tamil Nadu"
+
+def test_alias_jk_abbreviation():
+    assert extract_state("Some Hospital, Srinagar, J&K") == "Jammu And Kashmir"
+
+def test_alias_delhi_nct():
+    assert extract_state("Some Hospital, Delhi (Nct)") == "Delhi"
+
+def test_alias_new_delhi():
+    assert extract_state("Some Hospital, New Delhi") == "Delhi"
+
+def test_alias_uttarajgand_typo():
+    assert extract_state("Some Hospital, Dehradun, Uttarajgand") == "Uttarakhand"
+
+def test_alias_telangana_state():
+    assert extract_state("Some Hospital, Hyderabad, Telangana State") == "Telangana"
+
+def test_alias_orissa_old_name():
+    assert extract_state("Some Hospital, Bhubaneswar, Orissa") == "Odisha"
+
+def test_alias_hp_abbreviation():
+    assert extract_state("Some Hospital, Shimla, Hp") == "Himachal Pradesh"
+
+# ── State embedded in free-form text ──────────────────────────────────────
+
+def test_state_embedded_at_end_of_part():
+    # "Hubballi Karnataka" — city + state fused, state at end
+    name = "KLE Hospital, Hubballi Karnataka"
+    assert extract_state(name) == "Karnataka"
+
+def test_state_embedded_with_pin_and_text():
+    # "Bagalkot – 587103 Karnataka" — PIN then state in same part
+    name = "Some Hospital, Bagalkot – 587103 Karnataka"
+    assert extract_state(name) == "Karnataka"
+
+def test_state_embedded_in_long_address():
+    # State appears at end of long free-text last part
+    name = "District Hospital Campus, Jail Road Ratlam Madhya Pradesh"
+    assert extract_state(name) == "Madhya Pradesh"
+
+def test_state_embedded_jk_in_text():
+    # J&K appears inside a longer descriptive string
+    name = "J&K- Main Campus Dialgam, Anantnag"
+    assert extract_state(name) == "Jammu And Kashmir"
+
+def test_state_concatenated_suffix():
+    # "malappuramkerala" — state name glued onto city name with no space
+    name = "Hospital, Malappuramkerala"
+    assert extract_state(name) == "Kerala"
+
+def test_state_concatenated_chennai_suffix():
+    # "vadapalanichennai" — city+city concatenated, Chennai → Tamil Nadu
+    name = "Hospital, Vadapalanichennai"
+    assert extract_state(name) == "Tamil Nadu"
+
+def test_state_in_duplicate_trailing_blob():
+    # Real pattern: structured address + duplicate free-text blob
+    name = ("Accord Superspeciality Hospital, Sector 86, "
+            "Village Tehsil-District Faridabad Haryana – 121002,"
+            "Accord Superspeciality Hospital Khasra No.22 Sector 86")
+    assert extract_state(name) == "Haryana"
+
 def test_extract_state_non_string_returns_unknown():
     assert extract_state(None) == "Unknown"
 

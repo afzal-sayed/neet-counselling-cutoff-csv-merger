@@ -41,14 +41,14 @@ section { margin-bottom: 2rem; }
 @media (max-width: 1023px) { .rounds-grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 639px)  { .rounds-grid { grid-template-columns: 1fr; } }
 
-.round-card { background: var(--surface); border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.25rem; display: flex; flex-direction: column; gap: .75rem; transition: border-color var(--transition), box-shadow var(--transition); }
+.round-card { background: var(--surface); border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.25rem; display: flex; flex-direction: column; gap: .75rem; transition: border-color var(--transition), box-shadow var(--transition); min-width: 0; }
 .round-card.has-file  { border-style: solid; border-color: var(--success); }
 .round-card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.2); }
 .card-label { font-weight: 600; font-size: .875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
 .drop-zone { border: 1px dashed var(--border); border-radius: 6px; padding: 1rem; text-align: center; cursor: pointer; font-size: .875rem; color: var(--text-muted); transition: var(--transition); }
 .drop-zone:hover { border-color: var(--accent); color: var(--accent); }
-.file-info { display: flex; align-items: center; gap: .5rem; font-size: .8rem; }
-.file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-info { display: flex; align-items: flex-start; gap: .5rem; font-size: .8rem; min-width: 0; }
+.file-name { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; }
 .clear-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; padding: 0 .2rem; }
 
 /* ── Generate ──────────────────────────────────────────────────── */

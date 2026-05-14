@@ -16,7 +16,27 @@
 
   <main class="app-main">
 
+    <div class="step-wizard" id="step-wizard" aria-label="Progress steps">
+      <div class="step active" data-step="1">
+        <div class="step-dot"><span>1</span></div>
+        <span class="step-label">Upload</span>
+      </div>
+      <div class="step-track"></div>
+      <div class="step" data-step="2">
+        <div class="step-dot"><span>2</span></div>
+        <span class="step-label">Review</span>
+      </div>
+      <div class="step-track"></div>
+      <div class="step" data-step="3">
+        <div class="step-dot"><span>3</span></div>
+        <span class="step-label">Download</span>
+      </div>
+    </div>
+
     <section id="upload-section">
+      <div class="hero-intro">
+        <p class="hero-subtitle">Upload your NEET PG counselling round files and get a single merged sheet with one click.</p>
+      </div>
       <p class="section-hint">Select all round files, then click Generate.</p>
       <div class="rounds-grid" id="rounds-grid"></div>
       <div class="generate-bar">

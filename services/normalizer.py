@@ -127,6 +127,62 @@ _COLUMN_MAP = {
     'rank':                'rank',
 }
 
+_CATEGORY_ALIASES: dict[str, str] = {
+    'open':    'Open',
+    'obc':     'OBC',
+    'sc':      'SC',
+    'st':      'ST',
+    'ews':     'EWS',
+    'openpwd': 'Open PwD',
+    'obcpwd':  'OBC PwD',
+    'scpwd':   'SC PwD',
+    'stpwd':   'ST PwD',
+    'ewspwd':  'EWS PwD',
+}
+
+_COURSE_OCR_FIXES: list[tuple] = [
+    # Stray spaces inside hyphenated compounds
+    (r'RADIO-\s+DIAGNOSIS',          'RADIO-DIAGNOSIS'),
+    (r'OTO-\s+RHINO-\s*LARYNGOLOGY', 'OTO-RHINO-LARYNGOLOGY'),
+    (r'IMMUNO-\s+HAEMATOLOGY',       'IMMUNO-HAEMATOLOGY'),
+    # OCR mid-word splits
+    (r'ANAESTHESIOLOG\s+Y',  'ANAESTHESIOLOGY'),
+    (r'VENEREOLOG\s+Y',      'VENEREOLOGY'),
+    (r'VENEREOL\s+OGY',      'VENEREOLOGY'),
+    (r'VENER\s+EOLOGY',      'VENEREOLOGY'),
+    (r'VENEREOLO\s+GY',      'VENEREOLOGY'),
+    (r'DERMATOLOG\s+Y',      'DERMATOLOGY'),
+    (r'DERMATOLO\s+GY',      'DERMATOLOGY'),
+    (r'DERMAT\s+OLOGY',      'DERMATOLOGY'),
+    (r'LEPROS\s+Y',          'LEPROSY'),
+    (r'LEPRO\s+SY',          'LEPROSY'),
+    (r'LE\s+PROSY',          'LEPROSY'),
+    (r'S\s+KIN\b',           'SKIN'),
+    # Fused words
+    (r'Obstetricsand\b',     'Obstetrics and'),
+    (r'PREVENTIVEand\b',     'PREVENTIVE and'),
+    (r'DERMATOLOGYand\b',    'DERMATOLOGY and'),
+    (r'VENEREOLOGYand\b',    'VENEREOLOGY and'),
+    (r'VENE\.and\b',         'VENE. and'),
+    (r'TRANSFUSIONMEDICINE', 'TRANSFUSION MEDICINE'),
+    (r'PHYSICALMED\.',       'PHYSICAL MED.'),
+    (r'COMMUNITYHEALTH',     'COMMUNITY HEALTH'),
+    (r'Respiratorydiseases', 'Respiratory diseases'),
+    (r'EmergencyMedicine',   'Emergency Medicine'),
+    # Missing space after (NBEMS) / (NBEMS-DIPLOMA) prefix
+    (r'\(NBEMS\)(?=[A-Za-z])',         '(NBEMS) '),
+    (r'\(NBEMS-DIPLOMA\)(?=[A-Za-z])', '(NBEMS-DIPLOMA) '),
+    # Missing space before opening paren after M.D. / MS
+    (r'M\.D\.\(',  'M.D. ('),
+    (r'\bMS\(',    'MS ('),
+    # DIP.IN / DIPLOMA variants
+    (r'DIP\.IN MEDICAL RADIO-\s*DIAGNOSIS', 'DIP.IN MEDICAL RADIO-DIAGNOSIS'),
+    (r'DIPLOMA IN OPHTHALMOLOGY/DOM\s+S',   'DIPLOMA IN OPHTHALMOLOGY/DOMS'),
+    (r'DIP\. IN PHY\. MEDICINEand REHAB\.', 'DIP. IN PHY. MEDICINE and REHAB.'),
+    # Collapse double spaces (run last)
+    (r'  +', ' '),
+]
+
 ABBREVIATIONS = {
     'gmc':   'government medical college',
     'govt':  'government',
@@ -146,6 +202,22 @@ _REQUIRED = ['Allotted Quota', 'Allotted Institute', 'Alloted Course', 'Alloted 
 _SORTED_ALIASES = sorted(_STATE_ALIASES.keys(), key=len, reverse=True)
 
 
+def normalize_category(value) -> str:
+    if not isinstance(value, str):
+        return value
+    key = re.sub(r'\s+', '', value).lower()
+    return _CATEGORY_ALIASES.get(key, value)
+
+
+def normalize_course(value) -> str:
+    if not isinstance(value, str):
+        return value
+    result = value
+    for pattern, replacement in _COURSE_OCR_FIXES:
+        result = re.sub(pattern, replacement, result)
+    return result.strip()
+
+
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     rename = {col: _COLUMN_MAP[col.strip().lower()]
               for col in df.columns if col.strip().lower() in _COLUMN_MAP}
@@ -155,7 +227,10 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(
             f"Could not map columns: {missing}. Detected: {list(df.columns)}"
         )
-    return df[_REQUIRED + ['_round']].copy()
+    df = df[_REQUIRED + ['_round']].copy()
+    df['Alloted Category'] = df['Alloted Category'].map(normalize_category)
+    df['Alloted Course']   = df['Alloted Course'].map(normalize_course)
+    return df
 
 
 # ── State extraction helpers ───────────────────────────────────────────────

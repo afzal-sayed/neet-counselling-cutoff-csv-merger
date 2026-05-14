@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from services.normalizer import normalize_columns, extract_state, expand_abbreviations
+from services.normalizer import normalize_columns, extract_state, expand_abbreviations, normalize_category, normalize_course
 
 def make_df(cols, rows=None, round_num=1):
     rows = rows or [['x'] * len(cols)]
@@ -179,3 +179,67 @@ def test_expand_preserves_unknown_words():
 
 def test_expand_non_string_returns_empty():
     assert expand_abbreviations(None) == ''
+
+# ── Category normalization ─────────────────────────────────────────
+
+def test_category_obcpwd_fused():
+    assert normalize_category('OBCPwD') == 'OBC PwD'
+
+def test_category_ewspwd_fused():
+    assert normalize_category('EWSPwD') == 'EWS PwD'
+
+def test_category_scpwd_fused():
+    assert normalize_category('SCPwD') == 'SC PwD'
+
+def test_category_stpwd_fused():
+    assert normalize_category('STPwD') == 'ST PwD'
+
+def test_category_open_unchanged():
+    assert normalize_category('Open') == 'Open'
+
+def test_category_scpwd_with_space_unchanged():
+    assert normalize_category('SC PwD') == 'SC PwD'
+
+def test_category_non_string_passthrough():
+    assert normalize_category(None) is None
+
+# ── Course normalization ───────────────────────────────────────────
+
+def test_course_anaesthesiology_ocr():
+    assert normalize_course('ANAESTHESIOLOG Y') == 'ANAESTHESIOLOGY'
+
+def test_course_venereology_split():
+    assert normalize_course('VENEREOLOG Y') == 'VENEREOLOGY'
+
+def test_course_vener_eology_split():
+    assert normalize_course('VENER EOLOGY') == 'VENEREOLOGY'
+
+def test_course_dermatology_split():
+    assert normalize_course('DERMATOLOG Y') == 'DERMATOLOGY'
+
+def test_course_radio_diagnosis_space():
+    assert normalize_course('RADIO- DIAGNOSIS') == 'RADIO-DIAGNOSIS'
+
+def test_course_oto_rhino_laryngology():
+    assert normalize_course('OTO- RHINO-LARYNGOLOGY') == 'OTO-RHINO-LARYNGOLOGY'
+
+def test_course_nbems_prefix_space():
+    assert normalize_course('(NBEMS)Otorhinolaryngology') == '(NBEMS) Otorhinolaryngology'
+
+def test_course_nbems_diploma_prefix_space():
+    assert normalize_course('(NBEMS-DIPLOMA)Obstetrics') == '(NBEMS-DIPLOMA) Obstetrics'
+
+def test_course_md_paren_space():
+    assert normalize_course('M.D.(Emergency Medicine)') == 'M.D. (Emergency Medicine)'
+
+def test_course_transfusion_medicine_fused():
+    assert normalize_course('TRANSFUSIONMEDICINE') == 'TRANSFUSION MEDICINE'
+
+def test_course_double_space_collapsed():
+    assert normalize_course('COMMUNITY HEALTH  and ADMN.') == 'COMMUNITY HEALTH and ADMN.'
+
+def test_course_leprosy_split():
+    assert normalize_course('LEPROS Y') == 'LEPROSY'
+
+def test_course_non_string_passthrough():
+    assert normalize_course(None) is None

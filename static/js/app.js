@@ -59,7 +59,7 @@ function buildCards() {
 
     const dropZone = el('div', { className: 'drop-zone' },
       [el('span', { textContent: 'Drop file here or ' }),
-       el('u', { textContent: 'browse' })]);
+      el('u', { textContent: 'browse' })]);
     dropZone.dataset.key = key;
 
     const fname = el('span', { className: 'file-name' });
@@ -84,9 +84,9 @@ function buildCards() {
 
 function attachCardListeners() {
   ROUND_META.forEach(({ key }) => {
-    const zone  = document.querySelector(`.drop-zone[data-key="${key}"]`);
+    const zone = document.querySelector(`.drop-zone[data-key="${key}"]`);
     const input = $(`input-${key}`);
-    const card  = document.querySelector(`.round-card[data-key="${key}"]`);
+    const card = document.querySelector(`.round-card[data-key="${key}"]`);
 
     zone.addEventListener('click', () => input.click());
     input.addEventListener('change', () => { if (input.files[0]) setFile(key, input.files[0]); });
@@ -122,7 +122,7 @@ function clearFile(key) {
 
 // ── Theme Toggle ───────────────────────────────────────────────────
 function initTheme() {
-  const btn  = $('theme-toggle');
+  const btn = $('theme-toggle');
   const html = document.documentElement;
   const update = t => {
     html.dataset.theme = t;
@@ -141,7 +141,7 @@ function showMissingModal(missing, onConfirm) {
     `Missing: ${missing.join(', ')}. Results may be incomplete. Continue anyway?`;
   show('modal-overlay');
   $('modal-yes').onclick = () => { hide('modal-overlay'); onConfirm(); };
-  $('modal-no').onclick  = () => hide('modal-overlay');
+  $('modal-no').onclick = () => hide('modal-overlay');
 }
 
 // ── Upload & Processing ────────────────────────────────────────────
@@ -199,22 +199,22 @@ function showReview(matches) {
   show('review-section');
   matchDecisions = {};
 
-  const summary   = $('match-summary');
-  const tbody     = $('match-tbody');
-  const bulkBtns  = document.querySelector('.bulk-btns');
+  const summary = $('match-summary');
+  const tbody = $('match-tbody');
+  const bulkBtns = document.querySelector('.bulk-btns');
   const tableWrap = document.querySelector('.table-wrap');
 
   if (matches.length === 0) {
     summary.textContent = 'No fuzzy matches found. Click Confirm to generate output.';
     tbody.textContent = '';
-    bulkBtns.style.display  = 'none';
+    bulkBtns.style.display = 'none';
     tableWrap.style.display = 'none';
     return;
   }
 
   summary.textContent =
     `${matches.length} fuzzy match${matches.length > 1 ? 'es' : ''} found. Review and approve before generating.`;
-  bulkBtns.style.display  = '';
+  bulkBtns.style.display = '';
   tableWrap.style.display = '';
   tbody.textContent = '';
 
@@ -222,21 +222,21 @@ function showReview(matches) {
     matchDecisions[i] = 'approve';
 
     const approveBtn = el('button', { textContent: '✓ Approve', className: 'active-approve' });
-    approveBtn.dataset.idx    = i;
+    approveBtn.dataset.idx = i;
     approveBtn.dataset.action = 'approve';
 
     const rejectBtn = el('button', { textContent: '✗ Reject' });
-    rejectBtn.dataset.idx    = i;
+    rejectBtn.dataset.idx = i;
     rejectBtn.dataset.action = 'reject';
 
     const actionDiv = el('div', { className: 'action-toggle' }, [approveBtn, rejectBtn]);
 
     const tr = el('tr', {}, [
       el('td', { textContent: m.original }),
-      el('td', { textContent: m.matched  }),
+      el('td', { textContent: m.matched }),
       el('td', { textContent: `${Number(m.score).toFixed(2)}%` }),
-      el('td', { textContent: m.round   }),
-      el('td', { textContent: m.state   }),
+      el('td', { textContent: m.round }),
+      el('td', { textContent: m.state }),
       el('td', {}, [actionDiv]),
     ]);
     tbody.appendChild(tr);
@@ -254,7 +254,7 @@ function showReview(matches) {
   });
 
   $('approve-all-btn').onclick = () => bulkDecision('approve', matches.length);
-  $('reject-all-btn').onclick  = () => bulkDecision('reject',  matches.length);
+  $('reject-all-btn').onclick = () => bulkDecision('reject', matches.length);
 }
 
 function bulkDecision(action, count) {

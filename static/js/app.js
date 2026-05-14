@@ -217,7 +217,7 @@ function showReview(matches) {
     const tr = el('tr', {}, [
       el('td', { textContent: m.original }),
       el('td', { textContent: m.matched  }),
-      el('td', { textContent: `${m.score}%` }),
+      el('td', { textContent: `${Number(m.score).toFixed(2)}%` }),
       el('td', { textContent: m.round   }),
       el('td', { textContent: m.state   }),
       el('td', {}, [actionDiv]),

@@ -1,6 +1,18 @@
 import re
 import pandas as pd
 
+# All Indian states and UTs, lowercase — used to validate extracted state candidates.
+_INDIAN_STATES = {
+    'andhra pradesh', 'arunachal pradesh', 'assam', 'bihar', 'chhattisgarh',
+    'goa', 'gujarat', 'haryana', 'himachal pradesh', 'jharkhand', 'karnataka',
+    'kerala', 'madhya pradesh', 'maharashtra', 'manipur', 'meghalaya', 'mizoram',
+    'nagaland', 'odisha', 'punjab', 'rajasthan', 'sikkim', 'tamil nadu',
+    'telangana', 'tripura', 'uttar pradesh', 'uttarakhand', 'west bengal',
+    'delhi', 'jammu and kashmir', 'ladakh', 'chandigarh', 'puducherry',
+    'andaman and nicobar islands', 'dadra and nagar haveli and daman and diu',
+    'lakshadweep',
+}
+
 _COLUMN_MAP = {
     'quota':               'Allotted Quota',
     'allotted quota':      'Allotted Quota',
@@ -43,16 +55,48 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df[_REQUIRED + ['_round']].copy()
 
 
+def _is_state(candidate: str) -> bool:
+    return candidate.strip().lower() in _INDIAN_STATES
+
+
+def _strip_pin(text: str) -> str:
+    """Remove a trailing PIN (with optional separator) from a string."""
+    return re.sub(r'[\s\-–]+\d{6}\b.*', '', text).strip()
+
+
 def extract_state(college_name) -> str:
     if not isinstance(college_name, str):
         return 'Unknown'
     parts = [p.strip() for p in college_name.split(',')]
+
     for i, part in enumerate(parts):
+        # Case 1: standalone 6-digit PIN — state is the part before it.
         if re.fullmatch(r'\d{6}', part):
-            return parts[i - 1].strip().title() if i > 0 else 'Unknown'
-    # No PIN found. Real format is "Name, City, State" — state is the last part.
-    if len(parts) >= 2:
-        return parts[-1].strip().title()
+            if i > 0:
+                candidate = parts[i - 1].strip()
+                return _strip_pin(candidate).title()
+            return 'Unknown'
+
+        # Case 2: PIN fused into a part (e.g. "Assam 782462", "Delhi-110010").
+        if re.search(r'\b\d{6}\b', part):
+            # 2a: state is in the next part (e.g. "Guntur-522002, Andhra Pradesh").
+            if i + 1 < len(parts):
+                nxt = parts[i + 1].strip()
+                if _is_state(nxt):
+                    return nxt.title()
+            # 2b: state is the prefix before the PIN in the same part
+            #     (e.g. "Assam 782462" → "Assam").
+            prefix = _strip_pin(part)
+            if prefix and _is_state(prefix):
+                return prefix.title()
+
+    # No PIN found anywhere — scan parts from the end and return the first
+    # recognised state name, skipping address fragments and long strings.
+    for part in reversed(parts[1:]):
+        candidate = part.strip()
+        if _is_state(candidate):
+            return candidate.title()
+
     return 'Unknown'
 
 

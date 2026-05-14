@@ -55,6 +55,27 @@ def test_extract_state_comma_in_college_name():
     name = "College of Medicine, Technology,Some City, Rajasthan, 302001"
     assert extract_state(name) == "Rajasthan"
 
+def test_extract_state_pin_fused_with_space():
+    # "Assam 782462" — PIN glued to state name with a space
+    name = "Diphu Medical College & Hospital,Thana Road, Diphu, Assam 782462"
+    assert extract_state(name) == "Assam"
+
+def test_extract_state_pin_fused_with_hyphen():
+    # "Delhi-110010" — PIN glued to state/UT name with a hyphen
+    name = "Some Hospital, Karol Bagh, Delhi-110010"
+    assert extract_state(name) == "Delhi"
+
+def test_extract_state_pin_fused_state_before_city():
+    # "Guntur-522002, Andhra Pradesh" — PIN in city part, state is the next part
+    name = "BMR Hospitals, 6/2, Arundelpet, Guntur-522002, Andhra Pradesh"
+    assert extract_state(name) == "Andhra Pradesh"
+
+def test_extract_state_duplicate_address_trailing():
+    # Duplicate free-text address appended after the structured address;
+    # fallback must not pick the address blob as the state
+    name = "Govt Medical College, Ramagundam, Telangana, Malkapur Village Ramagundam Mandal Pedapalli"
+    assert extract_state(name) == "Telangana"
+
 def test_extract_state_non_string_returns_unknown():
     assert extract_state(None) == "Unknown"
 

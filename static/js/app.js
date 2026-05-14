@@ -16,8 +16,24 @@ let matchDecisions = {};
 
 // ── DOM Helpers ────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
+function show(id) {
+  const node = $(id);
+  node.classList.remove('hidden');
+  node.classList.remove('section-enter');
+  void node.offsetWidth;
+  node.classList.add('section-enter');
+}
+function setStep(n) {
+  document.querySelectorAll('.step').forEach(s => {
+    const num = +s.dataset.step;
+    s.classList.toggle('active', num === n);
+    s.classList.toggle('done', num < n);
+  });
+  document.querySelectorAll('.step-track').forEach((t, i) => {
+    t.classList.toggle('done', i + 1 < n);
+  });
+}
 
 function el(tag, props = {}, children = []) {
   const node = document.createElement(tag);
@@ -178,6 +194,7 @@ function setProgress(pct, stage) {
 
 // ── Conflict Review ────────────────────────────────────────────────
 function showReview(matches) {
+  setStep(2);
   hide('progress-section');
   show('review-section');
   matchDecisions = {};
@@ -267,6 +284,7 @@ async function finalize() {
   });
   if (!resp.ok) { showError('Finalize failed'); return; }
 
+  setStep(3);
   hide('progress-section');
   show('download-section');
 }
@@ -296,6 +314,7 @@ function resetUI() {
   pendingMatches = [];
   matchDecisions = {};
   clearInterval(pollInterval);
+  setStep(1);
   buildCards();
   ['progress-section', 'review-section', 'download-section', 'error-section'].forEach(hide);
   show('upload-section');

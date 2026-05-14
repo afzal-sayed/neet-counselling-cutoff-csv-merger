@@ -76,12 +76,27 @@
     </section>
 
     <section id="download-section" class="hidden">
-      <h2>Download Ready</h2>
-      <div class="download-btns">
-        <button id="download-csv"  class="btn-download">⬇ Download CSV</button>
-        <button id="download-xlsx" class="btn-download btn-download--xlsx">⬇ Download XLSX</button>
+      <div class="success-check" aria-hidden="true">
+        <svg class="check-svg" viewBox="0 0 52 52">
+          <circle class="check-circle" cx="26" cy="26" r="24" fill="none"/>
+          <path class="check-tick" fill="none" d="M14 27l8 8 16-16"/>
+        </svg>
       </div>
-      <button id="home-btn" class="btn-secondary home-btn">← Start Over</button>
+      <h2>Your merged sheet is ready!</h2>
+      <div class="download-btns">
+        <button id="download-csv" class="btn-download">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="m8 11 4 4 4-4"/><path d="M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+          Download CSV
+        </button>
+        <button id="download-xlsx" class="btn-download btn-download--xlsx">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="m8 11 4 4 4-4"/><path d="M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+          Download XLSX
+        </button>
+      </div>
+      <button id="home-btn" class="btn-home home-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Start Over
+      </button>
     </section>
 
     <section id="error-section" class="hidden">

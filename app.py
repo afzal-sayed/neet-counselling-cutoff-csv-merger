@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, render_template, send_file
 
 from services.parser import read_file
 from services.normalizer import normalize_columns, extract_state
-from services.matcher import build_fuzzy_mapping, apply_mapping
+from services.matcher import build_fuzzy_mapping, apply_mapping, THRESHOLD
 from services.exporter import merge_rounds, build_xlsx, build_csv
 
 app = Flask(__name__)
@@ -39,12 +39,16 @@ def _process_job(job_id: str, files_data: dict) -> None:
         upd(60, 'Fuzzy matching colleges...')
         mapping, match_log = build_fuzzy_mapping(normalized)
 
+        # Split matches: score > threshold → auto-apply silently; score == threshold → show for review.
+        auto_approved = {m['original']: m['matched'] for m in match_log if m['score'] > THRESHOLD}
+        review_matches = [m for m in match_log if m['score'] <= THRESHOLD]
+
         # Write all fields before setting status='review' so polling threads
         # never see status=review with fuzzy_matches still empty.
         job['dfs'] = normalized
-        job['mapping'] = mapping
         job['match_log'] = match_log
-        job['fuzzy_matches'] = match_log
+        job['auto_approved_mapping'] = auto_approved
+        job['fuzzy_matches'] = review_matches
         job['progress'] = 100
         job['stage'] = 'Ready for review'
         job['status'] = 'review'  # written last — acts as the visibility barrier
@@ -96,7 +100,9 @@ def finalize(job_id: str):
         return jsonify({'error': 'Job not found'}), 404
 
     confirmed = request.get_json(force=True).get('confirmed_matches', [])
-    approved = {m['original']: m['canonical'] for m in confirmed}
+    # Merge auto-approved (high-confidence) with user-reviewed decisions.
+    approved = dict(job.get('auto_approved_mapping', {}))
+    approved.update({m['original']: m['canonical'] for m in confirmed})
 
     dfs = [apply_mapping(df, approved) for df in job['dfs']]
     approved_log = [m for m in job['match_log']

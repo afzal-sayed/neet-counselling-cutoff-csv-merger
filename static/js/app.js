@@ -309,5 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
   $('confirm-btn').addEventListener('click', finalize);
   $('download-csv').addEventListener('click', () => triggerDownload('csv'));
   $('download-xlsx').addEventListener('click', () => triggerDownload('xlsx'));
+  $('home-btn').addEventListener('click', resetUI);
   $('retry-btn').addEventListener('click', resetUI);
 });

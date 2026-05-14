@@ -87,6 +87,7 @@ h2 { font-size: 1.125rem; font-weight: 700; margin-bottom: .75rem; }
 
 /* ── Download ──────────────────────────────────────────────────── */
 .download-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+.home-btn { margin-top: 1.25rem; }
 
 /* ── Error ─────────────────────────────────────────────────────── */
 .error-msg { color: var(--danger); background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem; font-size: .875rem; }

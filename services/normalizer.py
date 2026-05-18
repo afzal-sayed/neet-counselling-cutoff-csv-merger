@@ -117,6 +117,7 @@ _COLUMN_MAP = {
     'quota':               'Allotted Quota',
     'allotted quota':      'Allotted Quota',
     'institute name':      'Allotted Institute',
+    'institute':           'Allotted Institute',
     'college':             'Allotted Institute',
     'allotted institute':  'Allotted Institute',
     'course':              'Alloted Course',

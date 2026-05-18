@@ -8,11 +8,12 @@ ROUND_LABELS = {
     4: 'Stray Vacancy', 5: 'Sp.Stray Vacancy',
 }
 THRESHOLD = 90
+MATCH_THRESHOLD = 88
 
 
 def build_fuzzy_mapping(
     dfs: list,
-    threshold: int = THRESHOLD,
+    threshold: int = MATCH_THRESHOLD,
 ) -> tuple:
     seen: dict = {}
     for df in sorted(dfs, key=lambda d: int(d['_round'].iloc[0])):

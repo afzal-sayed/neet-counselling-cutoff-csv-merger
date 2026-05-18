@@ -212,57 +212,152 @@ function showReview(matches) {
     return;
   }
 
+  const conflictCount = matches.reduce((n, m) => n + m.courses.filter(c => c.conflict).length, 0);
   summary.textContent =
-    `${matches.length} fuzzy match${matches.length > 1 ? 'es' : ''} found. Review and approve before generating.`;
+    `${matches.length} institute match${matches.length !== 1 ? 'es' : ''} for review` +
+    (conflictCount ? ` | ${conflictCount} same-round conflict${conflictCount !== 1 ? 's' : ''} ⚠️` : '') +
+    '. Expand groups to review courses, then confirm.';
   bulkBtns.style.display = '';
   tableWrap.style.display = '';
   tbody.textContent = '';
 
-  matches.forEach((m, i) => {
-    matchDecisions[i] = 'approve';
+  matches.forEach(m => {
+    matchDecisions[m.original] = { groupApproved: true, courseOverrides: {} };
+    const hasConflict = m.courses.some(c => c.conflict);
 
-    const approveBtn = el('button', { textContent: '✓ Approve', className: 'active-approve' });
-    approveBtn.dataset.idx = i;
-    approveBtn.dataset.action = 'approve';
+    // ── Group header row ──
+    const expandCell = el('td', { className: 'expand-cell', textContent: hasConflict ? '▼' : '▶' });
 
-    const rejectBtn = el('button', { textContent: '✗ Reject' });
-    rejectBtn.dataset.idx = i;
-    rejectBtn.dataset.action = 'reject';
-
-    const actionDiv = el('div', { className: 'action-toggle' }, [approveBtn, rejectBtn]);
-
-    const tr = el('tr', {}, [
-      el('td', { textContent: m.original }),
-      el('td', { textContent: m.matched }),
-      el('td', { textContent: `${Number(m.score).toFixed(2)}%` }),
-      el('td', { textContent: m.round }),
-      el('td', { textContent: m.state }),
-      el('td', {}, [actionDiv]),
+    const nameCell = el('td', { colSpan: 1 }, [
+      el('span', { className: 'original-name', textContent: m.original }),
+      el('span', { className: 'arrow-sep', textContent: ' → ' }),
+      el('span', { className: 'canonical-name', textContent: m.matched }),
+      ...(hasConflict ? [el('span', { className: 'conflict-badge', textContent: ' ⚠️' })] : []),
     ]);
-    tbody.appendChild(tr);
-  });
 
-  tbody.addEventListener('click', e => {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const idx = +btn.dataset.idx;
-    matchDecisions[idx] = btn.dataset.action;
-    tbody.querySelectorAll(`button[data-idx="${idx}"]`).forEach(b => {
-      b.classList.remove('active-approve', 'active-reject');
+    const variantRounds = [...new Set(m.courses.flatMap(c => c.rounds))].sort();
+    const canonicalRoundsLabel = m.canonical_rounds && m.canonical_rounds.length
+      ? `  |  canonical: ${m.canonical_rounds.join(', ')}`
+      : '';
+    const metaCell = el('td', { className: 'meta-cell',
+      textContent: `${m.score.toFixed(1)}%  |  ${m.state}  |  ${m.courses.length} course${m.courses.length !== 1 ? 's' : ''}  |  variant: ${variantRounds.join(', ')}${canonicalRoundsLabel}` });
+
+    const approveAllBtn = el('button', { textContent: '✓ Approve All', className: 'active-approve' });
+    const rejectAllBtn  = el('button', { textContent: '✗ Reject All' });
+    const actionCell = el('td', {}, [el('div', { className: 'action-toggle' }, [approveAllBtn, rejectAllBtn])]);
+
+    const headerRow = el('tr', { className: 'match-group-header' + (hasConflict ? ' has-conflict' : '') },
+      [expandCell, nameCell, metaCell, el('td'), actionCell]);
+
+    // ── Course detail rows ──
+    const detailRows = m.courses.map(c => {
+      const courseLabel = el('td', { className: 'course-cell' + (c.conflict ? ' conflict-course' : '') }, [
+        ...(c.conflict ? [el('span', { textContent: '⚠️ ' })] : []),
+        el('span', { textContent: c.name }),
+      ]);
+
+      const badgeCell = el('td', { className: 'round-cell' },
+        c.rounds.map(r => el('span', { className: 'round-badge', textContent: r })));
+
+      const cApproveBtn = el('button', {
+        textContent: c.conflict ? '✓ Merge' : '✓ Approve',
+        className: 'active-approve course-action-btn',
+      });
+      cApproveBtn.dataset.course = c.name;
+      cApproveBtn.dataset.action = 'approve';
+
+      const cRejectBtn = el('button', {
+        textContent: c.conflict ? '✗ Keep Both' : '✗ Reject',
+        className: 'course-action-btn',
+      });
+      cRejectBtn.dataset.course = c.name;
+      cRejectBtn.dataset.action = 'reject';
+
+      const courseActionCell = el('td', {}, [el('div', { className: 'action-toggle' }, [cApproveBtn, cRejectBtn])]);
+
+      const tr = el('tr', { className: 'course-row' + (c.conflict ? ' conflict-row' : '') },
+        [el('td'), courseLabel, badgeCell, el('td'), courseActionCell]);
+
+      tr.addEventListener('click', e => {
+        const btn = e.target.closest('.course-action-btn');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const courseName = btn.dataset.course;
+        const groupDefault = matchDecisions[m.original].groupApproved;
+        const [aBtn, rBtn] = tr.querySelectorAll('.course-action-btn');
+        if (action === 'approve') {
+          aBtn.classList.add('active-approve'); rBtn.classList.remove('active-reject');
+          if (groupDefault) delete matchDecisions[m.original].courseOverrides[courseName];
+          else matchDecisions[m.original].courseOverrides[courseName] = true;
+        } else {
+          rBtn.classList.add('active-reject'); aBtn.classList.remove('active-approve');
+          if (!groupDefault) delete matchDecisions[m.original].courseOverrides[courseName];
+          else matchDecisions[m.original].courseOverrides[courseName] = false;
+        }
+      });
+
+      return tr;
     });
-    btn.classList.add(`active-${btn.dataset.action}`);
+
+    // Start expanded only when there's a conflict
+    detailRows.forEach(tr => { tr.style.display = hasConflict ? '' : 'none'; });
+
+    // Expand/collapse on header click
+    headerRow.addEventListener('click', e => {
+      if (e.target.closest('button')) return;
+      const expanded = detailRows[0]?.style.display !== 'none';
+      detailRows.forEach(tr => { tr.style.display = expanded ? 'none' : ''; });
+      expandCell.textContent = expanded ? '▶' : '▼';
+    });
+
+    // Approve All / Reject All for the group
+    approveAllBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      matchDecisions[m.original].groupApproved = true;
+      matchDecisions[m.original].courseOverrides = {};
+      approveAllBtn.classList.add('active-approve'); rejectAllBtn.classList.remove('active-reject');
+      detailRows.forEach(tr => {
+        tr.querySelectorAll('.course-action-btn[data-action="approve"]').forEach(b => b.classList.add('active-approve'));
+        tr.querySelectorAll('.course-action-btn[data-action="reject"]').forEach(b => b.classList.remove('active-reject'));
+      });
+    });
+
+    rejectAllBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      matchDecisions[m.original].groupApproved = false;
+      matchDecisions[m.original].courseOverrides = {};
+      rejectAllBtn.classList.add('active-reject'); approveAllBtn.classList.remove('active-approve');
+      detailRows.forEach(tr => {
+        tr.querySelectorAll('.course-action-btn[data-action="reject"]').forEach(b => b.classList.add('active-reject'));
+        tr.querySelectorAll('.course-action-btn[data-action="approve"]').forEach(b => b.classList.remove('active-approve'));
+      });
+    });
+
+    tbody.appendChild(headerRow);
+    detailRows.forEach(tr => tbody.appendChild(tr));
   });
 
-  $('approve-all-btn').onclick = () => bulkDecision('approve', matches.length);
-  $('reject-all-btn').onclick = () => bulkDecision('reject', matches.length);
-}
+  $('approve-all-btn').onclick = () => {
+    pendingMatches.forEach(m => {
+      matchDecisions[m.original].groupApproved = true;
+      matchDecisions[m.original].courseOverrides = {};
+    });
+    document.querySelectorAll('.match-group-header button:first-child').forEach(b => b.classList.add('active-approve'));
+    document.querySelectorAll('.match-group-header button:last-child').forEach(b => b.classList.remove('active-reject'));
+    document.querySelectorAll('.course-action-btn[data-action="approve"]').forEach(b => b.classList.add('active-approve'));
+    document.querySelectorAll('.course-action-btn[data-action="reject"]').forEach(b => b.classList.remove('active-reject'));
+  };
 
-function bulkDecision(action, count) {
-  for (let i = 0; i < count; i++) matchDecisions[i] = action;
-  document.querySelectorAll('.action-toggle button').forEach(btn => {
-    btn.classList.remove('active-approve', 'active-reject');
-    if (btn.dataset.action === action) btn.classList.add(`active-${action}`);
-  });
+  $('reject-all-btn').onclick = () => {
+    pendingMatches.forEach(m => {
+      matchDecisions[m.original].groupApproved = false;
+      matchDecisions[m.original].courseOverrides = {};
+    });
+    document.querySelectorAll('.match-group-header button:last-child').forEach(b => b.classList.add('active-reject'));
+    document.querySelectorAll('.match-group-header button:first-child').forEach(b => b.classList.remove('active-approve'));
+    document.querySelectorAll('.course-action-btn[data-action="reject"]').forEach(b => b.classList.add('active-reject'));
+    document.querySelectorAll('.course-action-btn[data-action="approve"]').forEach(b => b.classList.remove('active-approve'));
+  };
 }
 
 // ── Finalize ───────────────────────────────────────────────────────
@@ -271,16 +366,19 @@ async function finalize() {
   show('progress-section');
   setProgress(50, 'Generating final output...');
 
-  const confirmed = pendingMatches
-    .map((m, i) => matchDecisions[i] === 'approve'
-      ? { original: m.original, canonical: m.matched }
-      : null)
-    .filter(Boolean);
+  const decisions = [];
+  pendingMatches.forEach(m => {
+    const dec = matchDecisions[m.original];
+    decisions.push({ original: m.original, approved: dec.groupApproved });
+    for (const [course, approved] of Object.entries(dec.courseOverrides)) {
+      decisions.push({ original: m.original, course, approved });
+    }
+  });
 
   const resp = await fetch(`/finalize/${currentJobId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ confirmed_matches: confirmed }),
+    body: JSON.stringify({ decisions }),
   });
   if (!resp.ok) { showError('Finalize failed'); return; }
 

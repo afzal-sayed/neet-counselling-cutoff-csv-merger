@@ -243,3 +243,13 @@ def test_course_leprosy_split():
 
 def test_course_non_string_passthrough():
     assert normalize_course(None) is None
+
+def test_course_slash_space_normalization():
+    assert normalize_course('DERMATOLOGY /VENEREOLOGY') == 'DERMATOLOGY/VENEREOLOGY'
+    assert normalize_course('LEPROSY/ VENEREAL DISEASE') == 'LEPROSY/VENEREAL DISEASE'
+    assert normalize_course('A / B / C') == 'A/B/C'
+
+def test_course_hyphen_space_normalization():
+    assert normalize_course('OTO-RHINO- LARYNGOLOGY') == 'OTO-RHINO-LARYNGOLOGY'
+    assert normalize_course('RADIO- THERAPY') == 'RADIO-THERAPY'
+    assert normalize_course('IMMUNO- HAEMATOLOGY') == 'IMMUNO-HAEMATOLOGY'

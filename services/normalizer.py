@@ -179,6 +179,10 @@ _COURSE_OCR_FIXES: list[tuple] = [
     (r'DIP\.IN MEDICAL RADIO-\s*DIAGNOSIS', 'DIP.IN MEDICAL RADIO-DIAGNOSIS'),
     (r'DIPLOMA IN OPHTHALMOLOGY/DOM\s+S',   'DIPLOMA IN OPHTHALMOLOGY/DOMS'),
     (r'DIP\. IN PHY\. MEDICINEand REHAB\.', 'DIP. IN PHY. MEDICINE and REHAB.'),
+    # Normalise spaces around slash separators: "DERM /VENE" → "DERM/VENE"
+    (r'\s*/\s*', '/'),
+    # Normalise space after hyphen in compound words: "OTO-RHINO- LARYNGOLOGY" → "OTO-RHINO-LARYNGOLOGY"
+    (r'-\s+', '-'),
     # Collapse double spaces (run last)
     (r'  +', ' '),
 ]

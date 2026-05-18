@@ -322,5 +322,6 @@ def extract_state(college_name) -> str:
 def expand_abbreviations(name) -> str:
     if not isinstance(name, str):
         return ''
+    name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
     words = re.split(r'[\s,.\-]+', name.lower())
     return ' '.join(ABBREVIATIONS.get(w, w) for w in words if w)

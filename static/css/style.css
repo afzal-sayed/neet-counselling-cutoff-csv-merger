@@ -488,6 +488,68 @@ h2 {
 	margin-top: 1.25rem;
 }
 
+/* ── Match group rows ──────────────────────────────────────────── */
+.match-group-header {
+	cursor: pointer;
+	user-select: none;
+}
+.match-group-header:hover td {
+	background: rgba(99, 102, 241, 0.06);
+}
+[data-theme="dark"] .match-group-header:hover td,
+:root:not([data-theme="light"]) .match-group-header:hover td {
+	background: rgba(99, 102, 241, 0.12);
+}
+.match-group-header.has-conflict td {
+	background: rgba(245, 158, 11, 0.06);
+}
+[data-theme="dark"] .match-group-header.has-conflict td,
+:root:not([data-theme="light"]) .match-group-header.has-conflict td {
+	background: rgba(245, 158, 11, 0.1);
+}
+.expand-cell {
+	text-align: center;
+	color: var(--text-muted, #64748b);
+	font-size: 0.7rem;
+	width: 1.75rem;
+	padding: 0.625rem 0.25rem !important;
+}
+.original-name { color: var(--danger); }
+.canonical-name { color: var(--success); }
+.arrow-sep { color: var(--text-muted, #64748b); }
+.conflict-badge { font-size: 0.9em; }
+.meta-cell { color: var(--text-muted, #64748b); font-size: 0.75rem; white-space: nowrap; }
+.course-row td { background: rgba(0,0,0,0.02); }
+[data-theme="dark"] .course-row td,
+:root:not([data-theme="light"]) .course-row td {
+	background: rgba(255,255,255,0.02);
+}
+.course-row.conflict-row td { background: rgba(245, 158, 11, 0.06); }
+[data-theme="dark"] .course-row.conflict-row td,
+:root:not([data-theme="light"]) .course-row.conflict-row td {
+	background: rgba(245, 158, 11, 0.1);
+}
+.course-cell { padding-left: 2rem !important; font-size: 0.8rem; }
+.conflict-course { color: #d97706; }
+[data-theme="dark"] .conflict-course,
+:root:not([data-theme="light"]) .conflict-course { color: #fbbf24; }
+.round-cell { white-space: nowrap; }
+.round-badge {
+	display: inline-block;
+	background: rgba(99, 102, 241, 0.12);
+	color: #6366f1;
+	border-radius: 3px;
+	padding: 0.1rem 0.4rem;
+	font-size: 0.7rem;
+	margin-right: 0.2rem;
+	white-space: nowrap;
+}
+[data-theme="dark"] .round-badge,
+:root:not([data-theme="light"]) .round-badge {
+	background: rgba(99, 102, 241, 0.22);
+	color: #a5b4fc;
+}
+
 /* ── Download ──────────────────────────────────────────────────── */
 .download-btns {
 	display: flex;
